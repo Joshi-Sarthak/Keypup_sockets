@@ -1,14 +1,14 @@
 import express from "express"
-import { createServer } from "node:http"
+import {createServer} from "node:http"
 import cors from "cors"
-import { Server } from "socket.io"
+import {Server} from "socket.io"
 
 const app = express()
 const server = createServer(app)
 app.use(cors())
 
 const io = new Server(server, {
-	cors: { origin: "http://localhost:3000", methods: ["GET", "POST"] },
+	cors: {origin: "http://localhost:3000", methods: ["GET", "POST"]},
 })
 
 interface User {
@@ -20,7 +20,7 @@ interface User {
 const rooms: Record<string, User[]> = {}
 
 io.on("connection", (socket) => {
-	console.log("User connected", { id: socket.id })
+	console.log("User connected", {id: socket.id})
 
 	// Handle user joining a room
 	socket.on("join_room", (roomCode: string, name: string) => {
@@ -32,18 +32,26 @@ io.on("connection", (socket) => {
 		const userExists = rooms[roomCode].some((user) => user.id === socket.id)
 		if (!userExists) {
 			// Add the user's socket ID to the room
-			rooms[roomCode].push({ id: socket.id, name })
+			rooms[roomCode].push({id: socket.id, name})
 			socket.join(roomCode)
-
-
 
 			console.log(`User ${socket.id} joined room ${roomCode}`)
 		} else {
 			console.log(`User ${socket.id} is already in room ${roomCode}`)
 		}
 
-		console.log(rooms)
-		io.to(roomCode).emit("room_users", rooms)
+		console.log(rooms[roomCode])
+		io.to(roomCode).emit("room_users", rooms[roomCode])
+
+		socket.on("changeMode", (mode, selected) => {
+			console.log(mode, selected)
+			io.to(roomCode).emit("changeNonHostMode", mode, selected)
+		})
+
+		socket.on("startGame", (initialWords: string[]) => {
+			console.log(initialWords)
+			io.to(roomCode).emit("startNonHostGame", initialWords)
+		})
 	})
 
 	// Handle user disconnection

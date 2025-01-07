@@ -33,8 +33,16 @@ io.on("connection", (socket) => {
         else {
             console.log(`User ${socket.id} is already in room ${roomCode}`);
         }
-        console.log(rooms);
-        io.to(roomCode).emit("room_users", rooms);
+        console.log(rooms[roomCode]);
+        io.to(roomCode).emit("room_users", rooms[roomCode]);
+        socket.on("changeMode", (mode, selected) => {
+            console.log(mode, selected);
+            io.to(roomCode).emit("changeNonHostMode", mode, selected);
+        });
+        socket.on("startGame", (initialWords) => {
+            console.log(initialWords);
+            io.to(roomCode).emit("startNonHostGame", initialWords);
+        });
     });
     // Handle user disconnection
     socket.on("disconnect", () => {
