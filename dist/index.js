@@ -25,10 +25,16 @@ io.on("connection", (socket) => {
         // Check if the user's socket ID is already in the room
         const userExists = rooms[roomCode].some((user) => user.id === socket.id);
         if (!userExists) {
-            // Add the user's socket ID to the room
-            rooms[roomCode].push({ id: socket.id, name });
+            rooms[roomCode].push({
+                id: socket.id,
+                name,
+                finished: false,
+                mode: "",
+                subtype: "",
+                correctChars: 0,
+                rawChars: 0,
+            });
             socket.join(roomCode);
-            console.log(`User ${socket.id} joined room ${roomCode}`);
         }
         else {
             console.log(`User ${socket.id} is already in room ${roomCode}`);
@@ -42,6 +48,24 @@ io.on("connection", (socket) => {
         socket.on("startGame", (initialWords) => {
             console.log(initialWords);
             io.to(roomCode).emit("startNonHostGame", initialWords);
+        });
+        socket.on("endGame", (mode, subtype, correctChars, rawChars, totalTime) => {
+            console.log(mode, subtype, correctChars, rawChars);
+            if (rooms[roomCode]) {
+                // Update the player's stats
+                rooms[roomCode] = rooms[roomCode].map((user) => user.id === socket.id
+                    ? Object.assign(Object.assign({}, user), { mode,
+                        subtype,
+                        correctChars,
+                        rawChars,
+                        totalTime, finished: true }) : user);
+                // Check if all players have finished
+                const allFinished = rooms[roomCode].every((user) => user.finished);
+                console.log(allFinished);
+                if (allFinished) {
+                    io.to(roomCode).emit("gameResults", rooms[roomCode]);
+                }
+            }
         });
     });
     // Handle user disconnection
