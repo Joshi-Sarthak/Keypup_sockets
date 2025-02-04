@@ -1,14 +1,14 @@
 import express from "express"
-import {createServer} from "node:http"
+import { createServer } from "node:http"
 import cors from "cors"
-import {Server} from "socket.io"
+import { Server } from "socket.io"
 
 const app = express()
 const server = createServer(app)
 app.use(cors())
 
 const io = new Server(server, {
-	cors: {origin: "http://localhost:3000", methods: ["GET", "POST"]},
+	cors: { origin: "http://localhost:3000", methods: ["GET", "POST"] },
 })
 
 interface User {
@@ -25,14 +25,45 @@ interface User {
 const rooms: Record<string, User[]> = {}
 
 io.on("connection", (socket) => {
-	console.log("User connected", {id: socket.id})
+	console.log("User connected", { id: socket.id })
 
 	// Handle user joining a room
-	socket.on("join_room", (roomCode: string, name: string) => {
+
+	socket.on("create_room", (roomCode: string, name: string) => {
 		if (!rooms[roomCode]) {
 			rooms[roomCode] = []
 		}
 
+		// Check if the user's socket ID is already in the room
+		const userExists = rooms[roomCode].some((user) => user.id === socket.id)
+		if (!userExists) {
+			rooms[roomCode].push({
+				id: socket.id,
+				name,
+				finished: false,
+				mode: "",
+				subtype: "",
+				correctChars: 0,
+				rawChars: 0,
+			})
+			socket.join(roomCode)
+			console.log(`User ${socket.id} joined room ${roomCode}`)
+		} else {
+			console.log(`User ${socket.id} is already in room ${roomCode}`)
+		}
+	})
+
+	socket.on("check_room", (roomCode: string) => {
+		if (rooms[roomCode]) {
+			console.log(`Room ${roomCode} exists`)
+			socket.emit("room_exists", true)
+		} else {
+			console.log(`Room ${roomCode} does not exist`)
+			socket.emit("room_exists", false)
+		}
+	})
+
+	socket.on("join_room", (roomCode: string, name: string) => {
 		// Check if the user's socket ID is already in the room
 		const userExists = rooms[roomCode].some((user) => user.id === socket.id)
 		if (!userExists) {
