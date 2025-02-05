@@ -18,7 +18,8 @@ const rooms = {};
 io.on("connection", (socket) => {
     console.log("User connected", { id: socket.id });
     // Handle user joining a room
-    socket.on("create_room", (roomCode, name) => {
+    socket.on("create_room", (roomCode, name, email) => {
+        console.log("email : " + email);
         if (!rooms[roomCode]) {
             rooms[roomCode] = [];
         }
@@ -26,6 +27,7 @@ io.on("connection", (socket) => {
         const userExists = rooms[roomCode].some((user) => user.id === socket.id);
         if (!userExists) {
             rooms[roomCode].push({
+                email,
                 id: socket.id,
                 name,
                 finished: false,
@@ -51,11 +53,12 @@ io.on("connection", (socket) => {
             socket.emit("room_exists", false);
         }
     });
-    socket.on("join_room", (roomCode, name) => {
+    socket.on("join_room", (roomCode, name, email) => {
         // Check if the user's socket ID is already in the room
         const userExists = rooms[roomCode].some((user) => user.id === socket.id);
         if (!userExists) {
             rooms[roomCode].push({
+                email,
                 id: socket.id,
                 name,
                 finished: false,

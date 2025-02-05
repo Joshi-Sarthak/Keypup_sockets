@@ -1,17 +1,18 @@
 import express from "express"
-import { createServer } from "node:http"
+import {createServer} from "node:http"
 import cors from "cors"
-import { Server } from "socket.io"
+import {Server} from "socket.io"
 
 const app = express()
 const server = createServer(app)
 app.use(cors())
 
 const io = new Server(server, {
-	cors: { origin: "http://localhost:3000", methods: ["GET", "POST"] },
+	cors: {origin: "http://localhost:3000", methods: ["GET", "POST"]},
 })
 
 interface User {
+	email: string
 	finished: boolean
 	id: string
 	name: string
@@ -25,11 +26,12 @@ interface User {
 const rooms: Record<string, User[]> = {}
 
 io.on("connection", (socket) => {
-	console.log("User connected", { id: socket.id })
+	console.log("User connected", {id: socket.id})
 
 	// Handle user joining a room
 
-	socket.on("create_room", (roomCode: string, name: string) => {
+	socket.on("create_room", (roomCode: string, name: string, email: string) => {
+		console.log("email : " + email)
 		if (!rooms[roomCode]) {
 			rooms[roomCode] = []
 		}
@@ -38,6 +40,7 @@ io.on("connection", (socket) => {
 		const userExists = rooms[roomCode].some((user) => user.id === socket.id)
 		if (!userExists) {
 			rooms[roomCode].push({
+				email,
 				id: socket.id,
 				name,
 				finished: false,
@@ -63,11 +66,12 @@ io.on("connection", (socket) => {
 		}
 	})
 
-	socket.on("join_room", (roomCode: string, name: string) => {
+	socket.on("join_room", (roomCode: string, name: string, email: string) => {
 		// Check if the user's socket ID is already in the room
 		const userExists = rooms[roomCode].some((user) => user.id === socket.id)
 		if (!userExists) {
 			rooms[roomCode].push({
+				email,
 				id: socket.id,
 				name,
 				finished: false,
