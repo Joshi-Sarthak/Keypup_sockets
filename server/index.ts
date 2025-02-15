@@ -8,7 +8,7 @@ const server = createServer(app)
 app.use(cors())
 
 const io = new Server(server, {
-	cors: { origin: "https://keypup.vercel.app/", methods: ["GET", "POST"] },
+	cors: { origin: "https://keypup.vercel.app", methods: ["GET", "POST"] },
 })
 
 interface User {
