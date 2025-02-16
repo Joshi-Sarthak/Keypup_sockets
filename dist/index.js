@@ -11,7 +11,10 @@ const app = (0, express_1.default)();
 const server = (0, node_http_1.createServer)(app);
 app.use((0, cors_1.default)());
 const io = new socket_io_1.Server(server, {
-    cors: { origin: "http://localhost:3000", methods: ["GET", "POST"] },
+    cors: {
+        origin: ["https://keypup.vercel.app", "http://localhost:3000"],
+        methods: ["GET", "POST"],
+    },
 });
 // Rooms mapping: { roomCode: Room }
 const rooms = {};
@@ -97,7 +100,7 @@ io.on("connection", (socket) => {
                 // Check if all players have finished
                 const allFinished = rooms[roomCode].users.every((user) => user.finished);
                 if (allFinished) {
-                    io.to(roomCode).emit("gameResults", rooms[roomCode].users);
+                    io.to(roomCode).emit("gameResults", rooms[roomCode].users, roomCode);
                 }
             }
         });

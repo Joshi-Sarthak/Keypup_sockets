@@ -8,7 +8,10 @@ const server = createServer(app)
 app.use(cors())
 
 const io = new Server(server, {
-	cors: { origin: "https://keypup.vercel.app", methods: ["GET", "POST"] },
+	cors: {
+		origin: ["https://keypup.vercel.app", "http://localhost:3000"],
+		methods: ["GET", "POST"],
+	},
 })
 
 interface User {
@@ -138,7 +141,11 @@ io.on("connection", (socket) => {
 					)
 
 					if (allFinished) {
-						io.to(roomCode).emit("gameResults", rooms[roomCode].users)
+						io.to(roomCode).emit(
+							"gameResults",
+							rooms[roomCode].users,
+							roomCode
+						)
 					}
 				}
 			}
