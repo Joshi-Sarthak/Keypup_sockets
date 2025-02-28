@@ -92,6 +92,10 @@ io.on("connection", (socket) => {
 			})
 			socket.join(roomCode)
 		} else {
+			const user = rooms[roomCode].users.find((user) => user.id === socket.id)
+			if (user) {
+				user.finished = false
+			}
 			console.log(`User ${socket.id} is already in room ${roomCode}`)
 		}
 
